@@ -1,16 +1,16 @@
 # Google OIDC for Kubernetes Dashboard & Kubectl
 
-This will show you how to setup your Kubernetes cluster so that you can access it from the dashboard and `kubectl` with a Google OIDC token.
+This will show you how to setup your Kubernetes cluster so that you can access it from the dashboard _and_ `kubectl` with a Google OIDC token.
 
-Most of the document assumes that you're using kops on AWS, but you should be able to extract the relevant information to run this anywhere.
+Most of the document assumes that you're using kops on AWS, but you should be able to extract the relevant information to run this anywhere. 
 
 ## Versions
 
 - kubectl: 1.8.6
-- kubernetes: 1.8.6 **w/ RBAC enabled**
-- kops: 1.8
+- Kubernetes: 1.8.6 **w/ RBAC enabled**
+- Kops: 1.8
 
-The RBAC part is important.
+The RBAC part is important. 
 
 ## Tools
 
@@ -26,15 +26,18 @@ Just letting you know beforehand..
 
 ## Steps
 
+For this guide, Im using the domain `example.org` for `<your-domain>`.
+
 ### 1. Setup a OIDC application in Google
 
-a) https://console.cloud.google.com/apis/credentials
+a) Navigate to [Google API Credentials dashboard](https://console.cloud.google.com/apis/credentials
+) 
+b) `Create credentials` > `OAuth client ID` > `Web Application`
 
-b) Create credentials > OAuth client ID > Web Application
+c) Name it `Kubernetes` and add the callbacks URLS
 
-c) Name it Kubernetes and add the callbacks URLS
-`https://kuber.example/.org/oauth2/callback`
-`https://kuberos.example/.org/ui`
+- `https://kuber.example/.org/oauth2/callback`
+- `https://kuberos.example/.org/ui`
 
 ### 2. Configure the Kubernetes API Server
 
@@ -51,9 +54,13 @@ kubeAPIServer:
 
 And then do the usual `kops update` and `kops rolling-update` to update your cluster. This will take your master node down for a couple minutes.
 
+If you're not rolling kops, the API flags are very similar to the ones in kops config above. 
+
 ### 3. Create TLS Certs using LetsEncrypt
 
-Now, we'll create TLS certs for the subdomain that our kubernetes dashboard will be exposed (but authenticated).
+Now, we'll create TLS certs for the subdomain that our Kubernetes dashboard will be exposed (but authenticated).
+
+The tool here is [.acme.sh](https://github.com/Neilpang/acme.sh)
 
 ```
 ./acme.sh --issue -d "kuber.example.org" --dns dns_aws --keylength ec-256
@@ -61,7 +68,7 @@ Now, we'll create TLS certs for the subdomain that our kubernetes dashboard will
 
 ### 4. Create Nginx Ingress
 
-Next, we need to create an nginx-ingress so that we can serve our OIDC proxy and access our dashboard from a a domain. This part will just setup the base
+Next, we need to create an nginx-ingress so that we can serve our OIDC proxy and access our dashboard from a a domain. This part will just setup the base Nginx Ingress. We'll create the actual Ingress rules for our services in steps #6 and #7. 
 
 ````
 # Basics
@@ -81,10 +88,10 @@ kubectl patch deployment -n ingress-nginx nginx-ingress-controller --type='json'
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/service-l4.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/aws/patch-configmap-l4.yaml
 ````
+
 ### 5. Setup your route53 for new ELB
 
-Kops should have setup everything you needed as far as Kubernetes API server records, but we need to create an additional record that will wildcard match all subdomains to route them through our Nginx Ingress. If you would like, you can use kuber.example.org instead of a wildcard to limit scope.
-
+Kops should have setup everything you needed as far as Kubernetes API server records, but we need to create an additional record that will wildcard match all subdomains to route them through our Nginx Ingress so that we can access `kuber.example.org` and `kuberos.example.org`. If you would like, you can use kuber.example.org instead of a wildcard to limit scope.
 
 <img src="assets/r53-aws-nginx-ingress.png" width="400" />
 
@@ -107,7 +114,7 @@ kubectl create secret \
   --from-literal=session=enGCuITaBPHQtpZSxhcivw==
 ```
 
-Then create the TLS certs
+Then create the TLS certs we created with `.acme.sh`. 
 
 ```
 kubectl create secret tls kuberos-tls-secret \
@@ -116,7 +123,9 @@ kubectl create secret tls kuberos-tls-secret \
   -n kube-system
 ```
 
-Now back to the manifests, you can use kontemplate to see the output in YAML.
+**NOTE**: Make sure to append your intermediate cert `/Users/noqcks/.acme.sh/*.example.org_ecc/ca.cer` with your domain certs (`/Users/noqcks/.acme.sh/*.example.org_ecc/*.example.org.cer`). 
+
+Now back to the manifests for the OIDC Proxy, you can use kontemplate to see the output in YAML.
 
 ```
 kontemplate template cluster.yaml -i oidc-proxy-dashboard
@@ -150,8 +159,9 @@ Then we can deploy Kuberos to Kubernetes.
 kontemplate apply cluster.yaml -i kuberos
 ```
 
-The service should be running at `https://kuberos.example.org`. If we access it and login to our
-google account, it will generate us a id_token to use for authenticating with our
+The service should be running at `https://kuberos.example.org`. If you've run into issues, file an issue above.
+
+If we access it and login to our google account, it will generate us a `id_token` to use for authenticating with our cluster from `kubectl`
 
 ```
 kubectl config set-credentials "500IQDevOpsGenius@example.org" \
