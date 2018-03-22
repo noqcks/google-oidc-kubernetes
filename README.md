@@ -85,7 +85,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 
 Kops should have setup everything you needed as far as Kubernetes API server records, but we need to create an additional record that will wildcard match all subdomains to route them through our Nginx Ingress. If you would like, you can use kuber.example.org instead of a wildcard to limit scope.
 
-![r53](assets/r53-aws-nginx-ingress.png)
+
+<img src="assets/r53-aws-nginx-ingress.png" width="400" />
+
 
 ### 6. Deploy OIDC Proxy & Dashboard
 
@@ -160,5 +162,7 @@ kubectl config set-credentials "500IQDevOpsGenius@example.org" \
   --auth-provider-arg=refresh-token="REDACTED" \
   --auth-provider-arg=idp-issuer-url="https://accounts.google.com"
 ```
+
+We can try access our cluster using our user profile and notice that our RBAC allows us to access pods but not secrets!
 
 ![user-restricted](assets/restricted-kubernetes-user-access.png)
