@@ -1,0 +1,105 @@
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: admins-binding
+subjects:
+{{ range .admins -}}
+- kind: User
+  name: {{ . }}
+  apiGroup: rbac.authorization.k8s.io
+{{ end -}}
+roleRef:
+  kind: ClusterRole
+  name: admins
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: admins
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: developers-binding
+subjects:
+{{ range .developers -}}
+- kind: User
+  name: {{ . }}
+  apiGroup: rbac.authorization.k8s.io
+{{ end -}}
+roleRef:
+  kind: Role
+  name: developers
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: developers
+rules:
+- apiGroups: ["*"]
+  resources:
+    - pods
+    - events
+    - jobs
+    - cronjobs
+    - statefulsets
+    - ingresses
+    - services
+    - configmaps
+    - persistentvolumeclaims
+    - daemonsets
+    - replicationcontrollers
+    - replicasets
+    - deployments
+  verbs: ["get", "list"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kube-system
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+rules:
+  # Allow Dashboard to create and watch for changes of 'kubernetes-dashboard-key-holder' secret.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  # Allow Dashboard to get, update and delete 'kubernetes-dashboard-key-holder' secret.
+  resourceNames: ["kubernetes-dashboard-key-holder"]
+  verbs: ["get", "update", "delete"]
+  # Allow Dashboard to get metrics from heapster.
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-dashboard-minimal
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-dashboard
+  namespace: kube-system

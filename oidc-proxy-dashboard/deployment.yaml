@@ -1,0 +1,68 @@
+---
+kind: Deployment
+apiVersion: apps/v1beta1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard-oidc
+  name: kubernetes-dashboard-oidc
+  namespace: kube-system
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: kubernetes-dashboard-oidc
+  template:
+    metadata:
+      labels:
+        k8s-app: kubernetes-dashboard-oidc
+    spec:
+      containers:
+      - name: kubernetes-dashboard
+        image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.8.3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9090
+          initialDelaySeconds: 5
+          timeoutSeconds: 30
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+
+      - name: openresty-oidc
+        image: myobplatform/openresty-oidc:1.0.3
+        ports:
+        - containerPort: 9000
+          protocol: TCP
+        env:
+          - name: OIDC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: kube-dashboard-secrets
+                key: client_id
+          - name: OIDC_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: kube-dashboard-secrets
+                key: client_secret
+          - name: SESSION_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: kube-dashboard-secrets
+                key: session
+        volumeMounts:
+          - name: openresty-conf
+            mountPath: /conf
+            readOnly: true
+        args:
+          - "-c"
+          - "/conf/nginx.conf"
+
+      volumes:
+        - name: openresty-conf
+          configMap:
+            name: dashboard-oidc-config
+        - name: tmp-volume
+          emptyDir: {}
+      serviceAccountName: kubernetes-dashboard

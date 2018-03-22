@@ -1,0 +1,21 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kuberos
+  namespace: kube-system
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  tls:
+    - secretName: kuberos-tls-secret
+      hosts:
+        - "kuberos.ops.{{ .domain }}"
+  rules:
+    - host: "kuberos.ops.{{ .domain }}"
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: kuberos
+              servicePort: 80

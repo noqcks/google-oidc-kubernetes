@@ -1,0 +1,20 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+  name: kubernetes-dashboard-oidc
+  namespace: kube-system
+spec:
+  tls:
+    - secretName: kuber-tls-secret
+      hosts:
+        - kuber.{{ .domain }}
+  rules:
+  - host: kuber.{{ .domain }}
+    http:
+      paths:
+      - backend:
+          serviceName: kubernetes-dashboard-oidc
+          servicePort: 80
+        path: /

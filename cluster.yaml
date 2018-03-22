@@ -1,0 +1,20 @@
+---
+context: cluster.example.org
+global:
+  context: cluster.example.org
+  domain: example.org
+  oidcClientURL: https://accounts.google.com
+  oidcClientID: REDACTED.apps.googleusercontent.com
+  oidcClientSecret:
+  tlsKey:
+  tlsCert:
+include:
+  - name: oidc-proxy-dashboard
+    values:
+      developers:
+        - bill@example.org
+      admins:
+        - 500IQDevOpsGenius@example.org
+
+  - name: kuberos
+

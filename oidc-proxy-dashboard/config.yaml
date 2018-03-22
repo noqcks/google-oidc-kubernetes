@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-oidc-config
+  namespace: kube-system
+data:
+  nginx.conf: |-
+    events {
+      worker_connections 128;
+    }
+    error_log /dev/stdout debug;
+    env OIDC_CLIENT_ID;
+    env OIDC_CLIENT_SECRET;
+    env SESSION_SECRET;
+    http {
+      resolver 8.8.8.8;
+      lua_shared_dict introspection 10m;
+      lua_shared_dict discovery 10m;
+      server {
+        listen 9000;
+        set $session_secret os.getenv("SESSION_SECRET");
+        set $session_cookie_secure off; # set this to 'on' in prod!
+        large_client_header_buffers 4 32k;
+
+        location / {
+          access_by_lua_block {
+            local opts = {
+              redirect_uri_path = "/oauth2/callback",
+              discovery = "{{ .oidcClientURL }}/.well-known/openid-configuration",
+              client_id = os.getenv("OIDC_CLIENT_ID"),
+              client_secret = os.getenv("OIDC_CLIENT_SECRET"),
+              scope = "email openid",
+              refresh_session_interval = 900,
+              expiry_claim = "exp",
+              ssl_verify = "no",
+              redirect_uri_scheme = "https"
+            }
+
+            local res, err, _target, session = require("resty.openidc").authenticate(opts)
+            if err then
+              ngx.status = 500
+              ngx.say(err)
+              ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+            end
+            ngx.req.set_header("Authorization", "Bearer "..session.data.enc_id_token)
+          }
+          proxy_pass http://localhost:9090;
+        }
+      }
+    }
