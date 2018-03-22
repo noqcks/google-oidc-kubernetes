@@ -10,9 +10,9 @@ spec:
   tls:
     - secretName: kuberos-tls-secret
       hosts:
-        - "kuberos.ops.{{ .domain }}"
+        - "kuberos.{{ .domain }}"
   rules:
-    - host: "kuberos.ops.{{ .domain }}"
+    - host: "kuberos.{{ .domain }}"
       http:
         paths:
           - path: /
