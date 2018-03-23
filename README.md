@@ -1,7 +1,11 @@
-# Google OIDC for Kubernetes Dashboard & Kubectl
+# How to Secure your Kubernetes Cluster with Google OIDC
+
++ Kubernetes Dashboard & Kubectl +
 
 This will show you how to setup your Kubernetes cluster so that you can access it
-from the dashboard _and_ `kubectl` with a Google OIDC token.
+from the dashboard _and_ `kubectl` with a Google [OIDC](https://en.wikipedia.org/wiki/OpenID_Connect) token.
+
+This is much safer than passing around a single `~/.kube/config` to all your Developers! ;)
 
 One thing before we begin: this guide is written assuming you're using kops and
 Google OIDC, but it should be generic enough to work with any flavor of Kubernetes config and any OIDC provider.
@@ -192,6 +196,7 @@ kubectl create secret \
   generic \
   kuberos-secret \
   --from-literal=secret={{ OIDC client secret here }}
+
 ```
 
 Then we can deploy Kuberos to Kubernetes.
