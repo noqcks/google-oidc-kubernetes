@@ -76,7 +76,7 @@ with those credentials is able to manage route53.
 
 Nice! If all goes well the output should look like this
 
-<img src="assets/le-certs-output.png" width="700" />
+<img src="https://raw.githubusercontent.com/noqcks/google-oidc-kubernetes/master/assets/le-certs-output.png" width="700" />
 
 We'll use these later.
 
@@ -118,7 +118,7 @@ a wildcard to limit scope.
 
 This is what the setup looks like:
 
-<img src="assets/r53-aws-nginx-ingress.png" width="400" />
+<img src="https://raw.githubusercontent.com/noqcks/google-oidc-kubernetes/master/assets/r53-aws-nginx-ingress.png" width="400" />
 
 ### 6. Setup Proxy for Dashboard AuthN
 
@@ -217,7 +217,7 @@ kubectl config set-credentials "500IQDevOpsGenius@example.org" \
 
 We can try access our cluster using our user profile and notice that our RBAC allows us to access pods but not secrets!
 
-![user-restricted](assets/restricted-kubernetes-user-access.png)
+![user-restricted](https://raw.githubusercontent.com/noqcks/google-oidc-kubernetes/master/assets/restricted-kubernetes-user-access.png)
 
 Hooray! It's been a real effort, thank you for joining me in the journey!
 
