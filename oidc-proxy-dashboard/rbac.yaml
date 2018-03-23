@@ -59,7 +59,7 @@ rules:
     - replicationcontrollers
     - replicasets
     - deployments
-  verbs: ["get", "list"]
+  verbs: ["*"]
 ---
 apiVersion: v1
 kind: ServiceAccount
