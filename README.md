@@ -1,6 +1,6 @@
 # How to Secure your Kubernetes Cluster with Google OIDC
 
-+ Kubernetes Dashboard & Kubectl +
+> Kubernetes Dashboard & Kubectl 
 
 This will show you how to setup your Kubernetes cluster so that you can access it
 from the dashboard _and_ `kubectl` with a Google [OIDC](https://en.wikipedia.org/wiki/OpenID_Connect) token.
